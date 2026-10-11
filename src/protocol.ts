@@ -13,7 +13,7 @@ export type FlapPosition = 'auto' | 'swing' | 'high' | 'top' | 1 | 2 | 3 | 4 | 5
 
 export interface AcOptions {
   powerOn?: boolean;
-  powerAction?: 'on' | 'off' | 'maintain' | null;
+  powerAction?: 'on' | 'off' | 'maintain' | 'cancel_timer' | null;
   tempC?: number;
   measuredTempC?: number;
   mode?: AcMode;
@@ -83,7 +83,7 @@ export function generateAcCodeLsb(opts: AcOptions = {}): string {
       b6[4] = '0'; b6[5] = '1';
     }
   } else {
-    if (powerAction === 'maintain') {
+    if (powerAction === 'maintain' || powerAction === 'cancel_timer') {
       b6[0] = '0'; b6[1] = '0';
       b9PowerBit = powerOn ? '1' : '0';
     } else if (powerAction === 'on' || (powerAction === null && powerOn)) {
@@ -157,26 +157,32 @@ export function generateAcCodeLsb(opts: AcOptions = {}): string {
   const sBit = quietMode ? '1' : '0';
   baseBytes[15] = sBit + baseBytes[15].slice(1);
 
-  // Flap / Louver (Byte 14 bits 0..2, bit 3 fixed '1')
-  // 3-bit VVV: 0 = Louver/Swing, 1 = Auto, 2..7 = Position 1 (bottom) .. 6 (top)
-  const flapStr = String(flap).toLowerCase();
-  let vVal = 7; // Default to 7 (Pos 6 - Top / High pos)
-  if (flapStr === 'swing' || flapStr === 'louver') {
-    vVal = 0;
-  } else if (flapStr === 'auto') {
-    vVal = 1;
-  } else if (flapStr === 'high' || flapStr === 'top') {
-    vVal = 7;
-  } else if (flapStr === 'bottom' || flapStr === 'low') {
-    vVal = 2;
+  if (powerAction === 'cancel_timer') {
+    baseBytes[9] = '10010010';
+    baseBytes[10] = '00001010';
+    baseBytes[13] = '11100000';
   } else {
-    const pos = parseInt(flapStr, 10);
-    if (!isNaN(pos) && pos >= 1 && pos <= 6) {
-      vVal = 1 + pos;
+    // Flap / Louver (Byte 14 bits 0..2, bit 3 fixed '1')
+    // 3-bit VVV: 0 = Louver/Swing, 1 = Auto, 2..7 = Position 1 (bottom) .. 6 (top)
+    const flapStr = String(flap).toLowerCase();
+    let vVal = 7; // Default to 7 (Pos 6 - Top / High pos)
+    if (flapStr === 'swing' || flapStr === 'louver') {
+      vVal = 0;
+    } else if (flapStr === 'auto') {
+      vVal = 1;
+    } else if (flapStr === 'high' || flapStr === 'top') {
+      vVal = 7;
+    } else if (flapStr === 'bottom' || flapStr === 'low') {
+      vVal = 2;
+    } else {
+      const pos = parseInt(flapStr, 10);
+      if (!isNaN(pos) && pos >= 1 && pos <= 6) {
+        vVal = 1 + pos;
+      }
     }
+    const vBits = toLsb(vVal, 3);
+    baseBytes[13] = vBits + '1' + baseBytes[13].slice(4);
   }
-  const vBits = toLsb(vVal, 3);
-  baseBytes[13] = vBits + '1' + baseBytes[13].slice(4);
 
   // Options Register (Byte 15: N bit 0, H bit 3, I bit 4)
   const nBit = nightSetback ? '1' : '0';

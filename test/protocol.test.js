@@ -84,3 +84,96 @@ test('Protocol: binaryToDurations generates exact raw timings for Linux kernel L
   }
   assert.strictEqual(buf.length, 1228);
 });
+
+test('Protocol: cancel_timer action matches test_run.py', () => {
+  const jsCancel = generateAcCodeLsb({
+    powerOn: false,
+    powerAction: 'cancel_timer',
+    tempC: 24.0,
+    measuredTempC: 27.0,
+    mode: 'cooling',
+    fanSpeed: 'auto',
+    quietMode: true,
+    currentTimeHours: 12,
+    currentTimeMinutes: 0,
+  });
+
+  const pyCmd =
+    `python3 -c "import sys; sys.path.insert(0, 'tools'); import test_run; ` +
+    `print(test_run.generate_ac_code_lsb(power_on=False, power_action='cancel_timer', temp_c=24.0, measured_temp_c=27.0, mode='cooling', fan_speed='auto', quiet_mode=True, current_time_hours=12, current_time_minutes=0))"`;
+  const pyCancel = execSync(pyCmd, { cwd: '/home/dzy/homebridge-ac' }).toString().trim();
+  assert.strictEqual(jsCancel, pyCancel);
+});
+
+test('State: AcStateManager handles independent ON/OFF timers and interlocks safely (skipTransmit)', async () => {
+  const { AcStateManager } = await import('../dist/state.js');
+
+  const sm = new AcStateManager('/home/dzy/homebridge-ac/dist', '/dev/null', '/dev/null', 6, 38000, 50);
+  await sm.init();
+
+  // 1. Test mode, flap, and highPower/quietMode interlock
+  await sm.updateAndTransmit(
+    {
+      mode: 'dehumidify',
+      targetTemperature: 22.5,
+      fanSpeed: 'low',
+      flap: 3,
+      ionMode: true,
+      highPower: true,
+      quietMode: false,
+    },
+    { skipTransmit: true }
+  );
+  let st = sm.getState();
+  assert.strictEqual(st.mode, 'dehumidify');
+  assert.strictEqual(st.targetTemperature, 22.5);
+  assert.strictEqual(st.fanSpeed, 'low');
+  assert.strictEqual(st.flap, 3);
+  assert.strictEqual(st.ionMode, true);
+  assert.strictEqual(st.highPower, true);
+  assert.strictEqual(st.quietMode, false);
+
+  // Enabling quietMode automatically disables highPower
+  await sm.updateAndTransmit({ quietMode: true }, { skipTransmit: true });
+  st = sm.getState();
+  assert.strictEqual(st.quietMode, true);
+  assert.strictEqual(st.highPower, false);
+
+  // 2. Enable ON Timer independently -> timerMode === 'on'
+  await sm.updateAndTransmit(
+    { timerOnEnabled: true, timerOnHours: 7, timerOnMinutes: 30 },
+    { skipTransmit: true }
+  );
+  st = sm.getState();
+  assert.strictEqual(st.timerOnEnabled, true);
+  assert.strictEqual(st.timerOffEnabled, false);
+  assert.strictEqual(st.timerMode, 'on');
+
+  // 3. Also enable OFF Timer -> timerMode === 'combo'
+  await sm.updateAndTransmit(
+    { timerOffEnabled: true, timerOffHours: 23, timerOffMinutes: 10 },
+    { skipTransmit: true }
+  );
+  st = sm.getState();
+  assert.strictEqual(st.timerOnEnabled, true);
+  assert.strictEqual(st.timerOffEnabled, true);
+  assert.strictEqual(st.timerMode, 'combo');
+
+  // 4. Disable ON Timer while OFF Timer stays enabled -> timerMode === 'off'
+  await sm.updateAndTransmit({ timerOnEnabled: false }, { skipTransmit: true });
+  st = sm.getState();
+  assert.strictEqual(st.timerOnEnabled, false);
+  assert.strictEqual(st.timerOffEnabled, true);
+  assert.strictEqual(st.timerMode, 'off');
+
+  // 5. Disable OFF Timer -> both disabled -> timerMode === null and packet uses cancel_timer signature
+  await sm.updateAndTransmit({ timerOffEnabled: false }, { skipTransmit: true });
+  st = sm.getState();
+  assert.strictEqual(st.timerOnEnabled, false);
+  assert.strictEqual(st.timerOffEnabled, false);
+  assert.strictEqual(st.timerMode, null);
+  const packetBytes = st.lastPacketLsb.split(' ');
+  assert.strictEqual(packetBytes[9], '10010010');
+  assert.strictEqual(packetBytes[10], '00001010');
+  assert.strictEqual(packetBytes[13], '11100000');
+});

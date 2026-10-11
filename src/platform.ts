@@ -10,6 +10,7 @@ export class AehaAirConditionerPlatform implements DynamicPlatformPlugin {
   public readonly Service;
   public readonly Characteristic;
   private readonly stateManager: AcStateManager;
+  private tempPollTimer?: NodeJS.Timeout;
   private matterAccessoryUUID?: string;
   private hapAccessory?: PlatformAccessory;
 
@@ -28,11 +29,29 @@ export class AehaAirConditionerPlatform implements DynamicPlatformPlugin {
     const defaultFlap: FlapPosition = defaultFlapCfg === 'auto' ? 'auto' : 6;
     const carrierFrequency = typeof this.config.carrierFrequency === 'number' ? this.config.carrierFrequency : 38000;
     const dutyCycle = typeof this.config.dutyCycle === 'number' ? this.config.dutyCycle : 50;
+
     this.stateManager = new AcStateManager(storageDir, irDevice, dhtSensor, defaultFlap, carrierFrequency, dutyCycle);
+
+    // Keep HomeKit and Matter states automatically synchronized whenever state changes (including via Homebridge Embedded UI)
+    this.stateManager.onChange(() => {
+      this.syncMatterState().catch(() => {});
+    });
 
     this.api.on('didFinishLaunching', async () => {
       await this.stateManager.init();
+      this.stateManager.startFileWatch();
+      this.tempPollTimer = setInterval(() => {
+        this.stateManager.refreshAmbientTemperature().catch(() => {});
+      }, 15000);
       await this.setupAccessories();
+    });
+
+    this.api.on('shutdown', async () => {
+      if (this.tempPollTimer) {
+        clearInterval(this.tempPollTimer);
+        this.tempPollTimer = undefined;
+      }
+      this.stateManager.stopFileWatch();
     });
   }
 

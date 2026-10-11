@@ -1,0 +1,1176 @@
+<style>
+  :root {
+    /* Default: Homebridge Light / Bright Theme */
+    --bg-card: #ffffff;
+    --bg-card-alt: #f8fafc;
+    --bg-lcd: linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 100%);
+    --bg-tile: #f1f5f9;
+    --bg-tile-hover: #e2e8f0;
+    --bg-tile-active: rgba(2, 132, 199, 0.12);
+    --bg-code: #f1f5f9;
+    --border: #e2e8f0;
+    --border-lcd: #bae6fd;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-code: #0369a1;
+    --accent-cool: #0284c7;
+    --accent-heat: #ea580c;
+    --accent-dry: #7c3aed;
+    --accent-auto: #059669;
+    --accent-active: #0284c7;
+    --danger: #e11d48;
+    --success: #10b981;
+    --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+
+  body.dark-mode {
+    /* Homebridge Dark Theme */
+    --bg-card: rgba(30, 41, 59, 0.85);
+    --bg-card-alt: rgba(15, 23, 42, 0.65);
+    --bg-lcd: linear-gradient(145deg, #162235 0%, #0f172a 100%);
+    --bg-tile: rgba(30, 41, 59, 0.9);
+    --bg-tile-hover: rgba(51, 65, 85, 0.9);
+    --bg-tile-active: rgba(56, 189, 248, 0.18);
+    --bg-code: rgba(9, 13, 24, 0.85);
+    --border: rgba(255, 255, 255, 0.1);
+    --border-lcd: rgba(56, 189, 248, 0.25);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-code: #93c5fd;
+    --accent-cool: #38bdf8;
+    --accent-heat: #fb923c;
+    --accent-dry: #a78bfa;
+    --accent-auto: #34d399;
+    --accent-active: #38bdf8;
+    --danger: #f43f5e;
+    --success: #10b981;
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  .ac-remote-wrap,
+  .ac-remote-wrap * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ac-remote-wrap {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-main);
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 4px 2px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Header */
+  .ac-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 2px;
+  }
+  .ac-brand-title h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-main);
+  }
+  .ac-brand-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .ac-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+    display: inline-block;
+  }
+
+  /* Power Button */
+  .ac-power-btn {
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-tile);
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .ac-power-btn.active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  /* LCD Hero Card */
+  .ac-lcd-card {
+    background: var(--bg-lcd);
+    border: 1px solid var(--border-lcd);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: var(--shadow-card);
+  }
+  .ac-lcd-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ac-ambient-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  .ac-ambient-pill strong {
+    color: var(--accent-active);
+  }
+
+  .ac-temp-dial-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 4px 0 12px;
+  }
+  .ac-temp-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-size: 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    box-shadow: var(--shadow-card);
+  }
+  .ac-temp-btn:active {
+    transform: scale(0.93);
+  }
+  .ac-temp-display {
+    text-align: center;
+  }
+  .ac-temp-value {
+    font-size: 3.1rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-main);
+  }
+  .ac-temp-unit {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    vertical-align: super;
+  }
+  .ac-temp-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .ac-temp-slider {
+    width: 100%;
+    accent-color: var(--accent-active);
+    height: 6px;
+    border-radius: 999px;
+    cursor: pointer;
+    margin: 2px 0 8px;
+  }
+
+  .ac-lcd-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .ac-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .ac-badge.on {
+    background: var(--bg-tile-active);
+    color: var(--accent-active);
+    border-color: var(--accent-active);
+  }
+
+  /* Section Card */
+  .ac-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 13px;
+    box-shadow: var(--shadow-card);
+  }
+  .ac-card-title {
+    font-size: 0.73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    margin-bottom: 9px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Grids */
+  .ac-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+  }
+  .ac-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
+  }
+
+  .ac-btn-tile {
+    background: var(--bg-tile);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 6px;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .ac-btn-tile:hover {
+    background: var(--bg-tile-hover);
+  }
+  .ac-btn-tile:active {
+    transform: scale(0.96);
+  }
+  .ac-btn-tile .ac-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+  }
+  .ac-btn-tile.active {
+    background: var(--bg-tile-active);
+    color: var(--text-main);
+    border-color: var(--accent-active);
+  }
+  .ac-btn-tile.mode-cooling.active {
+    background: rgba(2, 132, 199, 0.14);
+    border-color: var(--accent-cool);
+    color: var(--accent-cool);
+  }
+  .ac-btn-tile.mode-heating.active {
+    background: rgba(234, 88, 12, 0.14);
+    border-color: var(--accent-heat);
+    color: var(--accent-heat);
+  }
+  .ac-btn-tile.mode-dehumidify.active {
+    background: rgba(124, 58, 237, 0.14);
+    border-color: var(--accent-dry);
+    color: var(--accent-dry);
+  }
+  .ac-btn-tile.mode-auto.active {
+    background: rgba(5, 150, 105, 0.14);
+    border-color: var(--accent-auto);
+    color: var(--accent-auto);
+  }
+
+  /* Flap Positions */
+  .ac-flap-top-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-bottom: 7px;
+  }
+  .ac-flap-pos-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+  .ac-flap-pos-btn {
+    background: var(--bg-tile);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 2px;
+    color: var(--text-muted);
+    font-size: 0.73rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+  }
+  .ac-flap-pos-btn.active {
+    background: var(--bg-tile-active);
+    color: var(--accent-active);
+    border-color: var(--accent-active);
+  }
+  .ac-louver-line {
+    width: 16px;
+    height: 3px;
+    background: currentColor;
+    border-radius: 2px;
+    display: block;
+    transform-origin: left center;
+  }
+
+  /* Toggle Switch Cards */
+  .ac-toggle-tile {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 11px 12px;
+    text-align: left;
+  }
+  .ac-toggle-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ac-toggle-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  .ac-toggle-sub {
+    font-size: 0.67rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .ac-pill-indicator {
+    font-size: 0.67rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .ac-btn-tile.active .ac-pill-indicator {
+    background: var(--accent-active);
+    border-color: var(--accent-active);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  /* Independent Timer Rows */
+  .ac-timer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ac-timer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    transition: all 0.15s ease;
+  }
+  .ac-timer-row.active {
+    border-color: var(--accent-active);
+    background: var(--bg-tile-active);
+  }
+  .ac-timer-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--text-main);
+    text-align: left;
+  }
+  .ac-switch-track {
+    width: 40px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--border);
+    position: relative;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+  }
+  .ac-timer-row.active .ac-switch-track {
+    background: var(--accent-active);
+  }
+  .ac-switch-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+  .ac-timer-row.active .ac-switch-thumb {
+    transform: translateX(18px);
+  }
+  .ac-timer-label-wrap {
+    display: flex;
+    flex-direction: column;
+  }
+  .ac-timer-title {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+  .ac-timer-sub {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+  }
+  .ac-timer-selects {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .ac-timer-select {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .ac-action-btn {
+    padding: 10px 12px;
+    border-radius: 11px;
+    border: 1px solid var(--border);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--bg-tile);
+    color: var(--text-main);
+    width: 100%;
+  }
+  .ac-action-btn:hover {
+    background: var(--bg-tile-hover);
+  }
+
+  /* Packet Inspector */
+  .ac-packet-box {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.7rem;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 8px;
+    color: var(--text-code);
+    word-break: break-all;
+    line-height: 1.45;
+    margin-top: 6px;
+  }
+  .ac-packet-label {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  /* Top View Switcher Tabs (Remote Control vs Plugin Settings) */
+  .ac-tab-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: var(--bg-tile);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .ac-tab-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 8px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .ac-tab-btn.active {
+    background: var(--bg-card);
+    color: var(--accent-active);
+    box-shadow: var(--shadow-card);
+  }
+
+  .ac-remote-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Mobile Phone Responsive Rules (< 440px) */
+  @media (max-width: 440px) {
+    .ac-remote-wrap {
+      padding: 2px 0 12px;
+      gap: 10px;
+    }
+    .ac-remote-body {
+      gap: 10px;
+    }
+    .ac-lcd-card {
+      padding: 13px 12px;
+    }
+    .ac-temp-value {
+      font-size: 2.6rem;
+    }
+    .ac-temp-btn {
+      width: 42px;
+      height: 42px;
+      font-size: 1.35rem;
+    }
+    .ac-flap-pos-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .ac-special-grid {
+      grid-template-columns: 1fr;
+    }
+    .ac-btn-tile {
+      padding: 8px 4px;
+      font-size: 0.72rem;
+    }
+    .ac-toggle-tile {
+      padding: 10px 11px;
+    }
+  }
+</style>
+
+<div class="ac-remote-wrap">
+  <!-- View Switcher: Remote Control vs Plugin Settings -->
+  <div class="ac-tab-bar">
+    <button type="button" class="ac-tab-btn active" id="tabRemoteBtn" onclick="switchViewTab('remote')">
+      <span>📱</span>
+      <span>Remote Control</span>
+    </button>
+    <button type="button" class="ac-tab-btn" id="tabSettingsBtn" onclick="switchViewTab('settings')">
+      <span>⚙️</span>
+      <span>Plugin Settings</span>
+    </button>
+  </div>
+
+  <div class="ac-remote-body" id="remoteControlView">
+    <!-- Header -->
+    <div class="ac-header">
+      <div class="ac-brand-title">
+        <h2 id="deviceName">Room Air Conditioner</h2>
+        <div class="ac-brand-subtitle">
+          <span class="ac-live-dot" id="liveDot"></span>
+          <span id="connText">Sanyo KMHS0772 • Live</span>
+        </div>
+      </div>
+      <button class="ac-power-btn" id="powerBtn" onclick="togglePower()">
+        <span>⏻</span>
+        <span id="powerText">OFF</span>
+      </button>
+    </div>
+
+    <!-- Hero LCD Card -->
+  <div class="ac-lcd-card">
+    <div class="ac-lcd-top-row">
+      <span class="ac-ambient-pill">
+        🌡️ Room: <strong id="measuredTemp">--.-°C</strong>
+      </span>
+      <span id="modeSummaryText">Standby</span>
+    </div>
+
+    <div class="ac-temp-dial-row">
+      <button class="ac-temp-btn" onclick="stepTemp(-0.5)" aria-label="Decrease temperature">−</button>
+      <div class="ac-temp-display">
+        <div>
+          <span class="ac-temp-value" id="targetTemp">24.0</span><span class="ac-temp-unit">°C</span>
+        </div>
+        <div class="ac-temp-label">Target Setpoint</div>
+      </div>
+      <button class="ac-temp-btn" onclick="stepTemp(0.5)" aria-label="Increase temperature">+</button>
+    </div>
+
+    <input
+      type="range"
+      class="ac-temp-slider"
+      id="tempSlider"
+      min="16"
+      max="30"
+      step="0.5"
+      value="24"
+      oninput="previewSlider(this.value)"
+      onchange="commitSlider(this.value)"
+    />
+
+    <div class="ac-lcd-badges">
+      <span class="ac-badge" id="badgeFlap">Flap: Pos 6</span>
+      <span class="ac-badge" id="badgeHighPower">⚡ Powerful</span>
+      <span class="ac-badge" id="badgeQuiet">🤫 Quiet</span>
+      <span class="ac-badge" id="badgeIon">🍃 Ionizer</span>
+      <span class="ac-badge" id="badgeEconomy">🌙 Night Setback</span>
+      <span class="ac-badge" id="badgeTimerOn" style="display:none">⏰ ON --:--</span>
+      <span class="ac-badge" id="badgeTimerOff" style="display:none">⏰ OFF --:--</span>
+    </div>
+  </div>
+
+  <!-- Operating Mode -->
+  <div class="ac-card">
+    <div class="ac-card-title">Operating Mode</div>
+    <div class="ac-grid-4">
+      <button class="ac-btn-tile mode-cooling" id="mode-cooling" onclick="setMode('cooling')">
+        <span class="ac-icon">❄️</span>
+        <span>Cool</span>
+      </button>
+      <button class="ac-btn-tile mode-heating" id="mode-heating" onclick="setMode('heating')">
+        <span class="ac-icon">☀️</span>
+        <span>Heat</span>
+      </button>
+      <button class="ac-btn-tile mode-dehumidify" id="mode-dehumidify" onclick="setMode('dehumidify')">
+        <span class="ac-icon">💧</span>
+        <span>Dry</span>
+      </button>
+      <button class="ac-btn-tile mode-auto" id="mode-auto" onclick="setMode('auto')">
+        <span class="ac-icon">🔄</span>
+        <span>Auto</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Fan Speed & Modifiers -->
+  <div class="ac-card">
+    <div class="ac-card-title">Fan Speed &amp; Boost</div>
+    <div class="ac-grid-4" style="margin-bottom: 7px;">
+      <button class="ac-btn-tile" id="fan-auto" onclick="setFan('auto')">
+        <span class="ac-icon">🅰️</span>
+        <span>Auto</span>
+      </button>
+      <button class="ac-btn-tile" id="fan-low" onclick="setFan('low')">
+        <span class="ac-icon">🌬️</span>
+        <span>Low</span>
+      </button>
+      <button class="ac-btn-tile" id="fan-med" onclick="setFan('med')">
+        <span class="ac-icon">💨</span>
+        <span>Med</span>
+      </button>
+      <button class="ac-btn-tile" id="fan-high" onclick="setFan('high')">
+        <span class="ac-icon">🌪️</span>
+        <span>High</span>
+      </button>
+    </div>
+    <div class="ac-grid-2">
+      <button class="ac-btn-tile ac-toggle-tile" id="toggle-highPower" onclick="toggleFlag('highPower')">
+        <div class="ac-toggle-left">
+          <span class="ac-icon">⚡</span>
+          <div>
+            <div class="ac-toggle-title">High Power</div>
+            <div class="ac-toggle-sub">Max turbo output</div>
+          </div>
+        </div>
+        <span class="ac-pill-indicator" id="pill-highPower">OFF</span>
+      </button>
+      <button class="ac-btn-tile ac-toggle-tile" id="toggle-quietMode" onclick="toggleFlag('quietMode')">
+        <div class="ac-toggle-left">
+          <span class="ac-icon">🤫</span>
+          <div>
+            <div class="ac-toggle-title">Quiet Mode</div>
+            <div class="ac-toggle-sub">Silent indoor fan</div>
+          </div>
+        </div>
+        <span class="ac-pill-indicator" id="pill-quietMode">OFF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Flap / Louver Position -->
+  <div class="ac-card">
+    <div class="ac-card-title">
+      <span>Flap / Louver Direction</span>
+      <span id="flapCurrentLabel" style="color: var(--accent-active)">Position 6 (Top)</span>
+    </div>
+    <div class="ac-flap-top-row">
+      <button class="ac-btn-tile" id="flap-swing" onclick="setFlap('swing')" style="flex-direction:row; gap:8px;">
+        <span class="ac-icon">↕️</span>
+        <span>Louver Swing</span>
+      </button>
+      <button class="ac-btn-tile" id="flap-auto" onclick="setFlap('auto')" style="flex-direction:row; gap:8px;">
+        <span class="ac-icon">🎯</span>
+        <span>Auto Angle</span>
+      </button>
+    </div>
+    <div class="ac-flap-pos-grid">
+      <button class="ac-flap-pos-btn" id="flap-6" onclick="setFlap(6)">
+        <span class="ac-louver-line" style="transform: rotate(8deg)"></span>
+        <span>Pos 6</span>
+      </button>
+      <button class="ac-flap-pos-btn" id="flap-5" onclick="setFlap(5)">
+        <span class="ac-louver-line" style="transform: rotate(22deg)"></span>
+        <span>Pos 5</span>
+      </button>
+      <button class="ac-flap-pos-btn" id="flap-4" onclick="setFlap(4)">
+        <span class="ac-louver-line" style="transform: rotate(36deg)"></span>
+        <span>Pos 4</span>
+      </button>
+      <button class="ac-flap-pos-btn" id="flap-3" onclick="setFlap(3)">
+        <span class="ac-louver-line" style="transform: rotate(50deg)"></span>
+        <span>Pos 3</span>
+      </button>
+      <button class="ac-flap-pos-btn" id="flap-2" onclick="setFlap(2)">
+        <span class="ac-louver-line" style="transform: rotate(64deg)"></span>
+        <span>Pos 2</span>
+      </button>
+      <button class="ac-flap-pos-btn" id="flap-1" onclick="setFlap(1)">
+        <span class="ac-louver-line" style="transform: rotate(78deg)"></span>
+        <span>Pos 1</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Special Functions -->
+  <div class="ac-card">
+    <div class="ac-card-title">Special Sanyo KMHS0772 Functions</div>
+    <div class="ac-grid-2 ac-special-grid">
+      <button class="ac-btn-tile ac-toggle-tile" id="toggle-ionMode" onclick="toggleFlag('ionMode')">
+        <div class="ac-toggle-left">
+          <span class="ac-icon">🍃</span>
+          <div>
+            <div class="ac-toggle-title">Ion / Air Clean</div>
+            <div class="ac-toggle-sub">Negative ionizer</div>
+          </div>
+        </div>
+        <span class="ac-pill-indicator" id="pill-ionMode">OFF</span>
+      </button>
+      <button class="ac-btn-tile ac-toggle-tile" id="toggle-nightSetback" onclick="toggleFlag('nightSetback')">
+        <div class="ac-toggle-left">
+          <span class="ac-icon">🌙</span>
+          <div>
+            <div class="ac-toggle-title">Night Setback</div>
+            <div class="ac-toggle-sub">Economy sleep curve</div>
+          </div>
+        </div>
+        <span class="ac-pill-indicator" id="pill-nightSetback">OFF</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Independent ON & OFF Hardware Timers -->
+  <div class="ac-card">
+    <div class="ac-card-title">
+      <span>Hardware Timers (RTC Synced)</span>
+      <span id="rtcClockDisplay">--:--</span>
+    </div>
+    <div class="ac-timer-list">
+      <!-- Independent ON Timer -->
+      <div class="ac-timer-row" id="timerOnRow">
+        <button type="button" class="ac-timer-toggle-btn" onclick="toggleTimer('on')">
+          <div class="ac-switch-track"><div class="ac-switch-thumb"></div></div>
+          <div class="ac-timer-label-wrap">
+            <span class="ac-timer-title">ON Timer</span>
+            <span class="ac-timer-sub" id="timerOnStatusSub">Disabled</span>
+          </div>
+        </button>
+        <div class="ac-timer-selects">
+          <select class="ac-timer-select" id="timerOnHours" onchange="updateTimerTime('on')"></select>
+          <span>:</span>
+          <select class="ac-timer-select" id="timerOnMinutes" onchange="updateTimerTime('on')">
+            <option value="0">00</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="40">40</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Independent OFF Timer -->
+      <div class="ac-timer-row" id="timerOffRow">
+        <button type="button" class="ac-timer-toggle-btn" onclick="toggleTimer('off')">
+          <div class="ac-switch-track"><div class="ac-switch-thumb"></div></div>
+          <div class="ac-timer-label-wrap">
+            <span class="ac-timer-title">OFF Timer</span>
+            <span class="ac-timer-sub" id="timerOffStatusSub">Disabled</span>
+          </div>
+        </button>
+        <div class="ac-timer-selects">
+          <select class="ac-timer-select" id="timerOffHours" onchange="updateTimerTime('off')"></select>
+          <span>:</span>
+          <select class="ac-timer-select" id="timerOffMinutes" onchange="updateTimerTime('off')">
+            <option value="0">00</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="40">40</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Diagnostics & Retransmit -->
+    <div class="ac-card">
+      <div class="ac-card-title">
+        <span>IR Packet &amp; Diagnostics</span>
+        <span id="lastUpdatedText">Never</span>
+      </div>
+      <button class="ac-action-btn" onclick="retransmitCurrentState()">
+        📡 Re-Transmit Current State via IR
+      </button>
+      <div class="ac-packet-box">
+        <div class="ac-packet-label">18-Byte Frame (Hex MSB)</div>
+        <div id="packetHex">--</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentState = null;
+
+  function switchViewTab(tab) {
+    const isRemote = tab === 'remote';
+    document.getElementById('tabRemoteBtn').classList.toggle('active', isRemote);
+    document.getElementById('tabSettingsBtn').classList.toggle('active', !isRemote);
+    document.getElementById('remoteControlView').style.display = isRemote ? 'flex' : 'none';
+
+    if (window.homebridge) {
+      if (isRemote && typeof window.homebridge.hideSchemaForm === 'function') {
+        window.homebridge.hideSchemaForm();
+      } else if (!isRemote && typeof window.homebridge.showSchemaForm === 'function') {
+        window.homebridge.showSchemaForm();
+      }
+      if (typeof window.homebridge.fixScrollHeight === 'function') {
+        window.homebridge.fixScrollHeight();
+      }
+    }
+  }
+
+  // Sync theme with Homebridge UI (Light vs Dark mode)
+  function syncHomebridgeTheme() {
+    try {
+      if (window.parent && window.parent !== window && window.parent.document && window.parent.document.body) {
+        const isParentDark = window.parent.document.body.classList.contains('dark-mode');
+        document.body.classList.toggle('dark-mode', isParentDark);
+      }
+    } catch {
+      // Fallback relies on Homebridge UI body-class postMessage
+    }
+  }
+
+  function populateHours() {
+    const onH = document.getElementById('timerOnHours');
+    const offH = document.getElementById('timerOffHours');
+    for (let h = 0; h < 24; h++) {
+      const label = String(h).padStart(2, '0');
+      onH.add(new Option(label, h));
+      offH.add(new Option(label, h));
+    }
+  }
+  populateHours();
+  syncHomebridgeTheme();
+
+  try {
+    if (window.parent && window.parent !== window && window.parent.document && window.parent.document.body) {
+      const obs = new MutationObserver(syncHomebridgeTheme);
+      obs.observe(window.parent.document.body, { attributes: true, attributeFilter: ['class'] });
+    }
+  } catch {
+    // Ignore cross-frame observer error if any
+  }
+
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('rtcClockDisplay').textContent =
+      'RTC ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  }
+  setInterval(updateClock, 5000);
+  updateClock();
+
+  function showToast(msg, isError) {
+    if (window.homebridge && window.homebridge.toast) {
+      if (isError) window.homebridge.toast.error(msg);
+      else window.homebridge.toast.info(msg);
+    }
+  }
+
+  function renderPayload(payload) {
+    if (!payload || !payload.state) return;
+    currentState = payload.state;
+
+    if (payload.name) {
+      document.getElementById('deviceName').textContent = payload.name;
+    }
+
+    const powerBtn = document.getElementById('powerBtn');
+    const powerText = document.getElementById('powerText');
+    powerBtn.classList.toggle('active', !!currentState.power);
+    powerText.textContent = currentState.power ? 'ON' : 'OFF';
+
+    document.getElementById('targetTemp').textContent = Number(currentState.targetTemperature).toFixed(1);
+    document.getElementById('tempSlider').value = currentState.targetTemperature;
+    document.getElementById('measuredTemp').textContent = Number(currentState.measuredTemperature).toFixed(1) + '°C';
+
+    const modeNames = { cooling: 'Cooling', heating: 'Heating', dehumidify: 'Dehumidify (Dry)', auto: 'Auto Mode' };
+    document.getElementById('modeSummaryText').textContent =
+      currentState.power ? (modeNames[currentState.mode] || currentState.mode) : 'Standby (Off)';
+
+    ['cooling', 'heating', 'dehumidify', 'auto'].forEach(m => {
+      const el = document.getElementById('mode-' + m);
+      if (el) el.classList.toggle('active', currentState.mode === m);
+    });
+
+    ['auto', 'low', 'med', 'high'].forEach(f => {
+      const el = document.getElementById('fan-' + f);
+      if (el) el.classList.toggle('active', currentState.fanSpeed === f);
+    });
+
+    const flap = String(currentState.flap);
+    document.getElementById('flap-swing').classList.toggle('active', flap === 'swing');
+    document.getElementById('flap-auto').classList.toggle('active', flap === 'auto');
+    for (let p = 1; p <= 6; p++) {
+      const btn = document.getElementById('flap-' + p);
+      if (btn) btn.classList.toggle('active', flap === String(p));
+    }
+
+    const flapDesc = flap === 'swing' ? 'Louver Swing' : flap === 'auto' ? 'Auto Angle' : 'Position ' + flap;
+    document.getElementById('flapCurrentLabel').textContent = flapDesc;
+    document.getElementById('badgeFlap').textContent = 'Flap: ' + flapDesc;
+
+    ['highPower', 'quietMode', 'ionMode', 'nightSetback'].forEach(flag => {
+      const active = !!currentState[flag];
+      const tile = document.getElementById('toggle-' + flag);
+      const pill = document.getElementById('pill-' + flag);
+      if (tile) tile.classList.toggle('active', active);
+      if (pill) pill.textContent = active ? 'ON' : 'OFF';
+    });
+
+    document.getElementById('badgeHighPower').classList.toggle('on', !!currentState.highPower);
+    document.getElementById('badgeQuiet').classList.toggle('on', !!currentState.quietMode);
+    document.getElementById('badgeIon').classList.toggle('on', !!currentState.ionMode);
+    document.getElementById('badgeEconomy').classList.toggle('on', !!currentState.nightSetback);
+
+    // Independent ON & OFF Timers
+    const onEnabled = !!currentState.timerOnEnabled;
+    const offEnabled = !!currentState.timerOffEnabled;
+    const onTimeStr = String(currentState.timerOnHours || 0).padStart(2, '0') + ':' + String(currentState.timerOnMinutes || 0).padStart(2, '0');
+    const offTimeStr = String(currentState.timerOffHours || 0).padStart(2, '0') + ':' + String(currentState.timerOffMinutes || 0).padStart(2, '0');
+
+    document.getElementById('timerOnRow').classList.toggle('active', onEnabled);
+    document.getElementById('timerOffRow').classList.toggle('active', offEnabled);
+    document.getElementById('timerOnStatusSub').textContent = onEnabled ? ('Active • Turns ON at ' + onTimeStr) : 'Disabled';
+    document.getElementById('timerOffStatusSub').textContent = offEnabled ? ('Active • Turns OFF at ' + offTimeStr) : 'Disabled';
+
+    document.getElementById('timerOnHours').value = currentState.timerOnHours || 0;
+    document.getElementById('timerOnMinutes').value = currentState.timerOnMinutes || 0;
+    document.getElementById('timerOffHours').value = currentState.timerOffHours || 0;
+    document.getElementById('timerOffMinutes').value = currentState.timerOffMinutes || 0;
+
+    const badgeTimerOn = document.getElementById('badgeTimerOn');
+    if (onEnabled) {
+      badgeTimerOn.style.display = 'inline-block';
+      badgeTimerOn.className = 'ac-badge on';
+      badgeTimerOn.textContent = '⏰ ON ' + onTimeStr;
+    } else {
+      badgeTimerOn.style.display = 'none';
+    }
+
+    const badgeTimerOff = document.getElementById('badgeTimerOff');
+    if (offEnabled) {
+      badgeTimerOff.style.display = 'inline-block';
+      badgeTimerOff.className = 'ac-badge on';
+      badgeTimerOff.textContent = '⏰ OFF ' + offTimeStr;
+    } else {
+      badgeTimerOff.style.display = 'none';
+    }
+
+    if (payload.packet) {
+      document.getElementById('packetHex').textContent = payload.packet.hex;
+    }
+    if (currentState.lastUpdated) {
+      const d = new Date(currentState.lastUpdated);
+      document.getElementById('lastUpdatedText').textContent = 'Updated ' + d.toLocaleTimeString();
+    }
+
+    if (window.homebridge && typeof window.homebridge.fixScrollHeight === 'function') {
+      window.homebridge.fixScrollHeight();
+    }
+  }
+
+  async function requestBackend(path, body, msg) {
+    try {
+      if (window.homebridge && typeof window.homebridge.request === 'function') {
+        const data = await window.homebridge.request(path, body);
+        renderPayload(data);
+        if (msg) showToast(msg);
+        return;
+      }
+    } catch (e) {
+      showToast('Failed to communicate with AC service', true);
+    }
+  }
+
+  function sendStateUpdate(patch, msg) {
+    return requestBackend('/state-update', patch, msg);
+  }
+
+  function togglePower() {
+    if (!currentState) return;
+    const next = !currentState.power;
+    sendStateUpdate({ power: next }, next ? 'Power ON transmitted' : 'Power OFF transmitted');
+  }
+
+  function previewSlider(val) {
+    document.getElementById('targetTemp').textContent = Number(val).toFixed(1);
+  }
+
+  function commitSlider(val) {
+    const num = Number(val);
+    sendStateUpdate({ targetTemperature: num }, 'Target set to ' + num.toFixed(1) + '°C');
+  }
+
+  function stepTemp(delta) {
+    if (!currentState) return;
+    const next = Math.max(16.0, Math.min(30.0, Number(currentState.targetTemperature) + delta));
+    document.getElementById('targetTemp').textContent = next.toFixed(1);
+    document.getElementById('tempSlider').value = next;
+    sendStateUpdate({ targetTemperature: next }, 'Target set to ' + next.toFixed(1) + '°C');
+  }
+
+  function setMode(mode) {
+    sendStateUpdate({ mode }, 'Mode: ' + mode.toUpperCase());
+  }
+
+  function setFan(fanSpeed) {
+    sendStateUpdate({ fanSpeed }, 'Fan: ' + fanSpeed.toUpperCase());
+  }
+
+  function setFlap(flap) {
+    sendStateUpdate({ flap }, 'Flap: ' + flap);
+  }
+
+  function toggleFlag(flag) {
+    if (!currentState) return;
+    const next = !currentState[flag];
+    sendStateUpdate({ [flag]: next }, flag + ': ' + (next ? 'ON' : 'OFF'));
+  }
+
+  function toggleTimer(which) {
+    if (!currentState) return;
+    const onH = Number(document.getElementById('timerOnHours').value);
+    const onM = Number(document.getElementById('timerOnMinutes').value);
+    const offH = Number(document.getElementById('timerOffHours').value);
+    const offM = Number(document.getElementById('timerOffMinutes').value);
+
+    if (which === 'on') {
+      const next = !currentState.timerOnEnabled;
+      sendStateUpdate(
+        { timerOnEnabled: next, timerOnHours: onH, timerOnMinutes: onM },
+        next ? 'ON Timer enabled' : 'ON Timer disabled'
+      );
+    } else {
+      const next = !currentState.timerOffEnabled;
+      sendStateUpdate(
+        { timerOffEnabled: next, timerOffHours: offH, timerOffMinutes: offM },
+        next ? 'OFF Timer enabled' : 'OFF Timer disabled'
+      );
+    }
+  }
+
+  function updateTimerTime(which) {
+    if (!currentState) return;
+    if (which === 'on') {
+      const onH = Number(document.getElementById('timerOnHours').value);
+      const onM = Number(document.getElementById('timerOnMinutes').value);
+      sendStateUpdate(
+        { timerOnHours: onH, timerOnMinutes: onM },
+        currentState.timerOnEnabled ? 'ON Timer updated' : undefined
+      );
+    } else {
+      const offH = Number(document.getElementById('timerOffHours').value);
+      const offM = Number(document.getElementById('timerOffMinutes').value);
+      sendStateUpdate(
+        { timerOffHours: offH, timerOffMinutes: offM },
+        currentState.timerOffEnabled ? 'OFF Timer updated' : undefined
+      );
+    }
+  }
+
+  function retransmitCurrentState() {
+    requestBackend('/action', { action: 'retransmit' }, 'IR state re-transmitted');
+  }
+
+  if (window.homebridge) {
+    window.homebridge.addEventListener('ready', async () => {
+      document.body.style.display = 'block';
+      syncHomebridgeTheme();
+      await requestBackend('/state');
+    });
+    window.homebridge.addEventListener('ac-state', event => {
+      if (event && event.data) {
+        renderPayload(event.data);
+      }
+    });
+  }
+
+  setTimeout(() => {
+    document.body.style.display = 'block';
+    syncHomebridgeTheme();
+    requestBackend('/state');
+  }, 300);
+</script>

@@ -23,8 +23,12 @@ A high-performance Homebridge dynamic platform plugin that exposes AEHA-protocol
   - Real-time clock synchronization in every transmitted packet.
 - **Ambient Temperature Sensor Integration**:
   - Reads ambient temperature directly from `/dev/dht0:temp` (or any single-line sensor file) to update current room temperature.
+- **Embedded Homebridge UI Remote Control Add-on (`homebridge-ui`)**:
+  - Integrates a full-featured, mobile-responsive **AC Remote Control UI** directly inside **Homebridge UI (`homebridge-config-ui-x`)** under the plugin's Settings modal.
+  - Automatically matches your **Homebridge Light / Dark theme** and syncs two-way in real time with Apple HomeKit and Matter.
+  - Exposes **100% of Sanyo KMHS0772 hardware controls**: Power, Mode (`Cool`, `Heat`, `Dry`, `Auto`), `0.5°C` Target Temp, Live Ambient Temp, Fan Speed, all 8 Louver/Flap states (Positions `1`–`6`, `Auto`, `Swing`), Special Modes (`Powerful`, `Quiet`, `Night Setback`, `Ionizer`), independent `ON Timer` and `OFF Timer` toggles, Force Retransmit, and a live 152-bit AEHA Frame Inspector.
 - **State Persistence**:
-  - Remembers power, mode, setpoint, and flap state across Homebridge reboots (`aeha_ac_state.json`).
+  - Remembers power, mode, setpoint, flap, and timer state across Homebridge reboots (`aeha_ac_state.json`).
 
 ---
 
@@ -85,7 +89,7 @@ npm install
 # Compile TypeScript
 npm run build
 
-# Run protocol test suite
+# Run protocol & state manager test suite
 npm test
 ```
 
