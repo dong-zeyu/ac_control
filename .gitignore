@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# TypeScript build output
+dist/
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Raw IR captures and signal dumps (never track recordings)
+tools/captures/
+*.txt
+captured_*
+synth_*
+
+# Runtime persistent state
+aeha_ac_state.json
+
+# Logs & temp
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db

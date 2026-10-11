@@ -1,0 +1,78 @@
+{
+  "pluginAlias": "AehaAirConditionerPlatform",
+  "pluginType": "platform",
+  "singular": true,
+  "headerDisplay": "Matter & HomeKit Air Conditioner (AEHA IR Protocol)",
+  "footerDisplay": "For details and bitfield mappings, see PROTOCOL.md.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Accessory Name",
+        "type": "string",
+        "default": "Room Air Conditioner",
+        "required": true
+      },
+      "irDevice": {
+        "title": "IR Transmitter Device",
+        "type": "string",
+        "default": "/dev/lirc0",
+        "description": "Path to the LIRC character device used for infrared transmission.",
+        "required": true
+      },
+      "carrierFrequency": {
+        "title": "Carrier Frequency (Hz)",
+        "type": "integer",
+        "default": 38000,
+        "description": "Modulation carrier frequency in Hz for the IR transmitter (default: 38000)."
+      },
+      "dutyCycle": {
+        "title": "IR Carrier Duty Cycle (%)",
+        "type": "integer",
+        "default": 50,
+        "minimum": 1,
+        "maximum": 99,
+        "description": "Modulation duty cycle percentage (default: 50 for 50%)."
+      },
+      "enableMatter": {
+        "title": "Enable Matter Protocol",
+        "type": "boolean",
+        "default": true,
+        "description": "Expose this AC as a Matter RoomAirConditioner when Matter is enabled on the Homebridge bridge."
+      },
+      "dhtSensor": {
+        "title": "DHT Sensor File Path",
+        "type": "string",
+        "default": "/dev/dht0:temp",
+        "description": "Path to read the ambient temperature."
+      },
+      "enableHap": {
+        "title": "Enable Parallel HomeKit (HAP) Accessory",
+        "type": "boolean",
+        "default": false,
+        "description": "Also publish a classic HomeKit HeaterCooler accessory so the AC appears directly on the Homebridge UI web dashboard."
+      },
+      "enableAuxSwitches": {
+        "title": "Enable Auxiliary Control Switches",
+        "type": "boolean",
+        "default": true,
+        "description": "Expose linked switches for Swing, Powerful, Quiet, Economy, and Ionizer under the Air Conditioner."
+      },
+      "defaultFlapPosition": {
+        "title": "Default Flap Position (Non-Swing)",
+        "type": "string",
+        "default": "6",
+        "description": "Flap position when Swing is off or by default.",
+        "oneOf": [
+          { "title": "Position 6 (High / Top)", "enum": ["6"] },
+          { "title": "Auto Flap", "enum": ["auto"] },
+          { "title": "Position 1 (Bottom)", "enum": ["1"] },
+          { "title": "Position 2", "enum": ["2"] },
+          { "title": "Position 3", "enum": ["3"] },
+          { "title": "Position 4", "enum": ["4"] },
+          { "title": "Position 5", "enum": ["5"] }
+        ]
+      }
+    }
+  }
+}

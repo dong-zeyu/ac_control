@@ -1,0 +1,1 @@
+mode2 -d /dev/lirc1 | awk 'BEGIN {bits=0; is_header=0} /^pulse/ {if ($2 > 3000) {bits=0; is_header=1}} /^space/ {if (is_header) {is_header=0} else if ($2 < 5000 && bits < 152) {printf "%s", ($2 > 1000 ? "1" : "0"); bits++; if (bits % 8 == 0) {if (bits == 152) {printf "\n"} else {printf " "}} fflush()}}'

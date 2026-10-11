@@ -1,0 +1,31 @@
+{
+  "name": "homebridge-aeha-ac",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Matter RoomAirConditioner and HomeKit plugin for AEHA Air Conditioners via Infrared",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "node --test test/protocol.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "homebridge-plugin"
+  ],
+  "engines": {
+    "node": "^22 || ^24",
+    "homebridge": "^2.0.0"
+  },
+  "dependencies": {
+    "ioctl": "^2.0.2"
+  },
+  "devDependencies": {
+    "homebridge": "^2.2.1",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
