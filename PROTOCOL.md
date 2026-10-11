@@ -1,6 +1,6 @@
-# AEHA Air Conditioner Infrared Protocol Specification
+# AEHA Air Conditioner Infrared Protocol Specification (Sanyo KMHS0772)
 
-This document specifies the reverse-engineered 19-byte (152-bit) infrared control protocol used by the air conditioner system.
+This document specifies the reverse-engineered 19-byte (152-bit) infrared control protocol captured and verified on the **Sanyo KMHS0772** air conditioner (using remote control model **RCS-KMHS0772** / AEHA format).
 
 ---
 

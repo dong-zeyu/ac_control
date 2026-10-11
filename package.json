@@ -2,7 +2,7 @@
   "name": "homebridge-aeha-ac",
   "version": "1.0.0",
   "private": true,
-  "description": "Matter RoomAirConditioner and HomeKit plugin for AEHA Air Conditioners via Infrared",
+  "description": "Matter RoomAirConditioner and HomeKit plugin for AEHA Air Conditioners via Infrared (tested on Sanyo KMHS0772)",
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -2,6 +2,8 @@
 
 A high-performance Homebridge dynamic platform plugin that exposes AEHA-protocol Air Conditioners via infrared using native Linux kernel LIRC character devices, with simultaneous **Matter** (`RoomAirConditioner`) and **Apple HomeKit** (`HeaterCooler`) support.
 
+> **Tested Hardware**: This protocol engine was reverse-engineered, captured, and tested directly on the **Sanyo KMHS0772** split air conditioner system using the **RCS-KMHS0772** remote control.
+
 ---
 
 ## Features

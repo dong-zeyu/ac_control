@@ -2,7 +2,7 @@
   "pluginAlias": "AehaAirConditionerPlatform",
   "pluginType": "platform",
   "singular": true,
-  "headerDisplay": "Matter & HomeKit Air Conditioner (AEHA IR Protocol)",
+  "headerDisplay": "Matter & HomeKit Air Conditioner (AEHA Protocol - tested on Sanyo KMHS0772)",
   "footerDisplay": "For details and bitfield mappings, see PROTOCOL.md.",
   "schema": {
     "type": "object",
