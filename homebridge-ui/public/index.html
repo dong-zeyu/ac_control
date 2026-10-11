@@ -629,9 +629,17 @@
     <!-- Hero LCD Card -->
   <div class="ac-lcd-card">
     <div class="ac-lcd-top-row">
-      <span class="ac-ambient-pill">
-        🌡️ Room: <strong id="measuredTemp">--.-°C</strong>
-      </span>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+        <span class="ac-ambient-pill" title="Measured Room Temperature">
+          🌡️ Room: <strong id="measuredTemp">--.-°C</strong>
+        </span>
+        <span class="ac-ambient-pill" title="Steadman Apparent Temperature (Wind Speed = 0)">
+          🤗 Apparent: <strong id="apparentTemp">--.-°C</strong>
+        </span>
+        <span class="ac-ambient-pill" title="Relative Humidity">
+          💧 RH: <strong id="measuredHumidity">--%</strong>
+        </span>
+      </div>
       <span id="modeSummaryText">Standby</span>
     </div>
 
@@ -965,6 +973,12 @@
     document.getElementById('targetTemp').textContent = Number(currentState.targetTemperature).toFixed(1);
     document.getElementById('tempSlider').value = currentState.targetTemperature;
     document.getElementById('measuredTemp').textContent = Number(currentState.measuredTemperature).toFixed(1) + '°C';
+    if (typeof currentState.apparentTemperature === 'number') {
+      document.getElementById('apparentTemp').textContent = Number(currentState.apparentTemperature).toFixed(1) + '°C';
+    }
+    if (typeof currentState.measuredHumidity === 'number') {
+      document.getElementById('measuredHumidity').textContent = Math.round(Number(currentState.measuredHumidity)) + '%';
+    }
 
     const modeNames = { cooling: 'Cooling', heating: 'Heating', dehumidify: 'Dehumidify (Dry)', auto: 'Auto Mode' };
     document.getElementById('modeSummaryText').textContent =

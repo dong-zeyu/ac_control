@@ -177,3 +177,13 @@ test('State: AcStateManager handles independent ON/OFF timers and interlocks saf
   assert.strictEqual(packetBytes[10], '00001010');
   assert.strictEqual(packetBytes[13], '11100000');
 });
+
+test('State: calculateApparentTemperature computes Steadman formula (windSpeed = 0)', async () => {
+  const { calculateApparentTemperature } = await import('../dist/state.js');
+  // At 23.0°C and 51% RH, e = 0.51 * 6.105 * exp((17.27 * 23) / (237.7 + 23)) = 14.288 hPa
+  // AT = 23.0 + 0.33 * 14.288 - 4.00 = 23.7°C
+  assert.strictEqual(calculateApparentTemperature(23.0, 51.0, 0), 23.7);
+  // At 30.0°C and 70% RH, e = 0.70 * 6.105 * exp((17.27 * 30) / (237.7 + 30)) = 29.669 hPa
+  // AT = 30.0 + 0.33 * 29.669 - 4.00 = 35.8°C
+  assert.strictEqual(calculateApparentTemperature(30.0, 70.0, 0), 35.8);
+});

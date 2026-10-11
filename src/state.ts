@@ -5,11 +5,30 @@ import { AcMode, FanSpeed, FlapPosition, generateAcCodeLsb, transmitIr } from '.
 
 export type TimerMode = 'on' | 'off' | 'combo' | null;
 
+/**
+ * Calculate Apparent Temperature (°C) using Steadman's formula (indoor / shade):
+ *   AT = Ta + 0.33 * e - 0.70 * v - 4.00
+ * where water vapor pressure e (hPa) is:
+ *   e = (RH / 100) * 6.105 * exp((17.27 * Ta) / (237.7 + Ta))
+ */
+export function calculateApparentTemperature(
+  tempC: number,
+  relativeHumidity: number,
+  windSpeedMs = 0
+): number {
+  const rh = Math.max(0, Math.min(100, relativeHumidity));
+  const vaporPressureHpa = (rh / 100) * 6.105 * Math.exp((17.27 * tempC) / (237.7 + tempC));
+  const at = tempC + 0.33 * vaporPressureHpa - 0.70 * windSpeedMs - 4.0;
+  return Math.round(at * 10) / 10;
+}
+
 export interface AcDeviceState {
   power: boolean;
   mode: AcMode;
   targetTemperature: number;
   measuredTemperature: number;
+  measuredHumidity: number;
+  apparentTemperature: number;
   fanSpeed: FanSpeed;
   flap: FlapPosition;
   quietMode: boolean;
@@ -38,6 +57,8 @@ export const DEFAULT_AC_STATE: AcDeviceState = {
   mode: 'cooling',
   targetTemperature: 24.0,
   measuredTemperature: 24.0,
+  measuredHumidity: 50.0,
+  apparentTemperature: calculateApparentTemperature(24.0, 50.0, 0),
   fanSpeed: 'auto',
   flap: 6, // High pos (top) instead of auto for non-swing
   quietMode: false,
@@ -58,6 +79,7 @@ export class AcStateManager {
   private stateFilePath: string;
   private irDevice: string;
   private dhtSensor: string;
+  private humiditySensor: string;
   private defaultFlap: FlapPosition;
   private carrierFrequency: number;
   private dutyCycle: number;
@@ -70,11 +92,13 @@ export class AcStateManager {
     dhtSensor = '/dev/dht0:temp',
     defaultFlap: FlapPosition = 6,
     carrierFrequency = 38000,
-    dutyCycle = 50
+    dutyCycle = 50,
+    humiditySensor = '/dev/dht0:humid'
   ) {
     this.stateFilePath = path.join(storageDir, 'aeha_ac_state.json');
     this.irDevice = irDevice;
     this.dhtSensor = dhtSensor;
+    this.humiditySensor = humiditySensor;
     this.defaultFlap = defaultFlap;
     this.carrierFrequency = carrierFrequency;
     this.dutyCycle = dutyCycle;
@@ -109,6 +133,11 @@ export class AcStateManager {
         const loaded = JSON.parse(data) as AcDeviceState;
         if (loaded.lastUpdated && loaded.lastUpdated !== this.state.lastUpdated) {
           this.state = { ...DEFAULT_AC_STATE, ...loaded };
+          this.state.apparentTemperature = calculateApparentTemperature(
+            this.state.measuredTemperature,
+            this.state.measuredHumidity,
+            0
+          );
           this.notifyListeners();
         }
       } catch {
@@ -144,11 +173,20 @@ export class AcStateManager {
       this.state = { ...DEFAULT_AC_STATE, flap: this.defaultFlap };
     }
 
-    // Try reading current ambient temperature
+    // Try reading current ambient temperature and humidity
     const ambient = await this.readAmbientTemperature();
     if (ambient !== null) {
       this.state.measuredTemperature = ambient;
     }
+    const humidity = await this.readAmbientHumidity();
+    if (humidity !== null) {
+      this.state.measuredHumidity = humidity;
+    }
+    this.state.apparentTemperature = calculateApparentTemperature(
+      this.state.measuredTemperature,
+      this.state.measuredHumidity,
+      0
+    );
 
     this.state.lastPacketLsb = this.buildPacketPreview();
 
@@ -201,10 +239,45 @@ export class AcStateManager {
     return null;
   }
 
+  async readAmbientHumidity(): Promise<number | null> {
+    try {
+      const raw = await fs.readFile(this.humiditySensor, 'utf-8');
+      const val = parseFloat(raw.trim());
+      if (!isNaN(val)) {
+        const pct = val > 100 ? val / 1000 : val;
+        return Math.max(0, Math.min(100, Math.round(pct * 10) / 10));
+      }
+    } catch {
+      // Fallback if humidity sensor is unavailable
+    }
+    return null;
+  }
+
   async refreshAmbientTemperature(): Promise<number | null> {
     const ambient = await this.readAmbientTemperature();
+    const humidity = await this.readAmbientHumidity();
+    let changed = false;
+
     if (ambient !== null && ambient !== this.state.measuredTemperature) {
       this.state.measuredTemperature = ambient;
+      changed = true;
+    }
+    if (humidity !== null && humidity !== this.state.measuredHumidity) {
+      this.state.measuredHumidity = humidity;
+      changed = true;
+    }
+
+    const newApparent = calculateApparentTemperature(
+      this.state.measuredTemperature,
+      this.state.measuredHumidity,
+      0
+    );
+    if (newApparent !== this.state.apparentTemperature) {
+      this.state.apparentTemperature = newApparent;
+      changed = true;
+    }
+
+    if (changed) {
       this.state.lastPacketLsb = this.buildPacketPreview();
       try {
         await fs.writeFile(this.stateFilePath, JSON.stringify(this.state, null, 2), 'utf-8');
@@ -272,11 +345,20 @@ export class AcStateManager {
     Object.assign(this.state, updates);
     this.state.lastUpdated = new Date().toISOString();
 
-    // Refresh ambient temp
+    // Refresh ambient temp & humidity
     const ambient = await this.readAmbientTemperature();
     if (ambient !== null) {
       this.state.measuredTemperature = ambient;
     }
+    const humidity = await this.readAmbientHumidity();
+    if (humidity !== null) {
+      this.state.measuredHumidity = humidity;
+    }
+    this.state.apparentTemperature = calculateApparentTemperature(
+      this.state.measuredTemperature,
+      this.state.measuredHumidity,
+      0
+    );
 
     const isTurningOff = 'power' in updates && updates.power === false;
     const isTurningOn = 'power' in updates && updates.power === true && !wasPower;

@@ -43,10 +43,22 @@
         "description": "Expose this AC as a Matter RoomAirConditioner when Matter is enabled on the Homebridge bridge."
       },
       "dhtSensor": {
-        "title": "DHT Sensor File Path",
+        "title": "DHT Temperature Sensor File Path",
         "type": "string",
         "default": "/dev/dht0:temp",
         "description": "Path to read the ambient temperature."
+      },
+      "humiditySensor": {
+        "title": "DHT Humidity Sensor File Path",
+        "type": "string",
+        "default": "/dev/dht0:humid",
+        "description": "Path to read the relative humidity for Steadman's Apparent Temperature calculation."
+      },
+      "enableApparentTempAccessory": {
+        "title": "Enable Apparent Temperature Accessory",
+        "type": "boolean",
+        "default": true,
+        "description": "Expose a standalone Apparent Temperature & Relative Humidity sensor accessory calculated using Steadman's formula (wind speed = 0)."
       },
       "enableHap": {
         "title": "Enable Parallel HomeKit (HAP) Accessory",

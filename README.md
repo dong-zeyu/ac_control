@@ -21,12 +21,13 @@ A high-performance Homebridge dynamic platform plugin that exposes AEHA-protocol
   - Vertical Louver / Flap positioning (Positions 1–6, Auto, and Swing).
   - Auxiliary controls: Powerful / Turbo mode, Quiet mode, Night Setback (Economy), and Negative Ion generator.
   - Real-time clock synchronization in every transmitted packet.
-- **Ambient Temperature Sensor Integration**:
-  - Reads ambient temperature directly from `/dev/dht0:temp` (or any single-line sensor file) to update current room temperature.
+- **Ambient Temperature, Humidity & Steadman's Apparent Temperature**:
+  - Reads ambient temperature (`/dev/dht0:temp`) and relative humidity (`/dev/dht0:humid`) to compute **Apparent Temperature** using **Steadman's Formula** ($AT = T_a + 0.33 \cdot e - 4.00$, assuming wind speed $v = 0\text{ m/s}$).
+  - Exposes a dedicated **Apparent Temperature** HomeKit accessory (`TemperatureSensor` + linked `HumiditySensor`) alongside the Air Conditioner.
 - **Embedded Homebridge UI Remote Control Add-on (`homebridge-ui`)**:
   - Integrates a full-featured, mobile-responsive **AC Remote Control UI** directly inside **Homebridge UI (`homebridge-config-ui-x`)** under the plugin's Settings modal.
   - Automatically matches your **Homebridge Light / Dark theme** and syncs two-way in real time with Apple HomeKit and Matter.
-  - Exposes **100% of Sanyo KMHS0772 hardware controls**: Power, Mode (`Cool`, `Heat`, `Dry`, `Auto`), `0.5°C` Target Temp, Live Ambient Temp, Fan Speed, all 8 Louver/Flap states (Positions `1`–`6`, `Auto`, `Swing`), Special Modes (`Powerful`, `Quiet`, `Night Setback`, `Ionizer`), independent `ON Timer` and `OFF Timer` toggles, Force Retransmit, and a live 152-bit AEHA Frame Inspector.
+  - Exposes **100% of Sanyo KMHS0772 hardware controls**: Power, Mode (`Cool`, `Heat`, `Dry`, `Auto`), `0.5°C` Target Temp, Live Room Temp, **Steadman Apparent Temp**, Relative Humidity, Fan Speed, all 8 Louver/Flap states (Positions `1`–`6`, `Auto`, `Swing`), Special Modes (`Powerful`, `Quiet`, `Night Setback`, `Ionizer`), independent `ON Timer` and `OFF Timer` toggles, Force Retransmit, and a live 152-bit AEHA Frame Inspector.
 - **State Persistence**:
   - Remembers power, mode, setpoint, flap, and timer state across Homebridge reboots (`aeha_ac_state.json`).
 
@@ -37,7 +38,7 @@ A high-performance Homebridge dynamic platform plugin that exposes AEHA-protocol
 - Raspberry Pi (or compatible Linux SBC) running Linux with `gpio-ir-tx` configured.
 - Infrared Transmitter LED wired to a GPIO pin (e.g. GPIO 22 on `/dev/lirc0`).
 - (Optional) Infrared Receiver (e.g. VS1838B on GPIO 17 `/dev/lirc1`) for decoding remotes.
-- (Optional) DHT22 / AM2302 temperature sensor.
+- (Optional) DHT11 / DHT22 / AM2302 temperature & humidity sensor.
 
 ---
 
@@ -55,6 +56,8 @@ Add the platform to your Homebridge `config.json`:
       "carrierFrequency": 38000,
       "dutyCycle": 50,
       "dhtSensor": "/dev/dht0:temp",
+      "humiditySensor": "/dev/dht0:humid",
+      "enableApparentTempAccessory": true,
       "defaultFlapPosition": "6",
       "enableMatter": true,
       "enableHap": false,
@@ -73,6 +76,8 @@ Add the platform to your Homebridge `config.json`:
 | `carrierFrequency` | integer | `38000` | IR carrier frequency in Hz (38 kHz). |
 | `dutyCycle` | integer | `50` | Modulation duty cycle percentage (50%). |
 | `dhtSensor` | string | `"/dev/dht0:temp"` | Path to read the ambient temperature sensor. |
+| `humiditySensor` | string | `"/dev/dht0:humid"` | Path to read the relative humidity sensor for Apparent Temperature. |
+| `enableApparentTempAccessory` | boolean | `true` | Expose a standalone Apparent Temperature & Relative Humidity accessory. |
 | `defaultFlapPosition`| string | `"6"` | Default flap position when non-swing (`"6"` = top/high, `"auto"`, `"1"`–`"5"`). |
 | `enableMatter` | boolean | `true` | Expose as a Matter `RoomAirConditioner` accessory. |
 | `enableHap` | boolean | `false` | Also expose a classic HomeKit `HeaterCooler` accessory. |

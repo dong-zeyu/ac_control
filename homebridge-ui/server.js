@@ -35,6 +35,7 @@ async function initServer() {
 
   let irDevice = '/dev/lirc0';
   let dhtSensor = '/dev/dht0:temp';
+  let humiditySensor = '/dev/dht0:humid';
   let defaultFlap = 6;
   let carrierFrequency = 38000;
   let dutyCycle = 50;
@@ -47,6 +48,7 @@ async function initServer() {
       if (plat.name) accessoryName = plat.name;
       if (plat.irDevice) irDevice = plat.irDevice;
       if (plat.dhtSensor) dhtSensor = plat.dhtSensor;
+      if (plat.humiditySensor) humiditySensor = plat.humiditySensor;
       if (plat.defaultFlapPosition === 'auto') defaultFlap = 'auto';
       if (typeof plat.carrierFrequency === 'number') carrierFrequency = plat.carrierFrequency;
       if (typeof plat.dutyCycle === 'number') dutyCycle = plat.dutyCycle;
@@ -55,7 +57,7 @@ async function initServer() {
     // Use defaults if config cannot be read
   }
 
-  stateManager = new AcStateManager(storageDir, irDevice, dhtSensor, defaultFlap, carrierFrequency, dutyCycle);
+  stateManager = new AcStateManager(storageDir, irDevice, dhtSensor, defaultFlap, carrierFrequency, dutyCycle, humiditySensor);
   await stateManager.init();
   stateManager.startFileWatch();
 

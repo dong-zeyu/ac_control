@@ -10,9 +10,11 @@ export class AehaAirConditionerPlatform implements DynamicPlatformPlugin {
   public readonly Service;
   public readonly Characteristic;
   private readonly stateManager: AcStateManager;
+  private readonly cachedAccessories: Map<string, PlatformAccessory> = new Map();
   private tempPollTimer?: NodeJS.Timeout;
   private matterAccessoryUUID?: string;
   private hapAccessory?: PlatformAccessory;
+  private apparentTempAccessory?: PlatformAccessory;
 
   constructor(
     public readonly log: Logging,
@@ -24,13 +26,22 @@ export class AehaAirConditionerPlatform implements DynamicPlatformPlugin {
 
     const irDevice = (this.config.irDevice as string) || '/dev/lirc0';
     const dhtSensor = (this.config.dhtSensor as string) || '/dev/dht0:temp';
+    const humiditySensor = (this.config.humiditySensor as string) || '/dev/dht0:humid';
     const storageDir = this.api.user.storagePath();
     const defaultFlapCfg = this.config.defaultFlapPosition as string;
     const defaultFlap: FlapPosition = defaultFlapCfg === 'auto' ? 'auto' : 6;
     const carrierFrequency = typeof this.config.carrierFrequency === 'number' ? this.config.carrierFrequency : 38000;
     const dutyCycle = typeof this.config.dutyCycle === 'number' ? this.config.dutyCycle : 50;
 
-    this.stateManager = new AcStateManager(storageDir, irDevice, dhtSensor, defaultFlap, carrierFrequency, dutyCycle);
+    this.stateManager = new AcStateManager(
+      storageDir,
+      irDevice,
+      dhtSensor,
+      defaultFlap,
+      carrierFrequency,
+      dutyCycle,
+      humiditySensor
+    );
 
     // Keep HomeKit and Matter states automatically synchronized whenever state changes (including via Homebridge Embedded UI)
     this.stateManager.onChange(() => {
@@ -56,13 +67,14 @@ export class AehaAirConditionerPlatform implements DynamicPlatformPlugin {
   }
 
   configureAccessory(accessory: PlatformAccessory): void {
-    this.hapAccessory = accessory;
+    this.cachedAccessories.set(accessory.UUID, accessory);
   }
 
   private async setupAccessories(): Promise<void> {
     const name = (this.config.name as string) || 'Room Air Conditioner';
     const enableMatter = this.config.enableMatter === true;
     const enableHap = this.config.enableHap !== false;
+    const enableApparentTemp = this.config.enableApparentTempAccessory !== false;
 
     // Check if Matter is requested and supported by this Homebridge instance
     if (enableMatter && this.api.matter) {
@@ -79,6 +91,17 @@ export class AehaAirConditionerPlatform implements DynamicPlatformPlugin {
       }
       this.log.info('Initializing classic HomeKit HAP HeaterCooler accessory...');
       this.setupHapAccessory(name);
+    }
+
+    if (enableApparentTemp) {
+      this.setupApparentTempAccessory(name);
+    } else {
+      const apparentUuid = this.api.hap.uuid.generate(`hap-apparent-temp-${name}`);
+      const existing = this.cachedAccessories.get(apparentUuid);
+      if (existing) {
+        this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existing]);
+        this.cachedAccessories.delete(apparentUuid);
+      }
     }
   }
 
@@ -350,6 +373,18 @@ export class AehaAirConditionerPlatform implements DynamicPlatformPlugin {
       }
     }
 
+    // 1b. Sync Apparent Temperature HAP accessory
+    if (this.apparentTempAccessory) {
+      const tempSvc = this.apparentTempAccessory.getService(this.Service.TemperatureSensor);
+      if (tempSvc) {
+        tempSvc.updateCharacteristic(this.Characteristic.CurrentTemperature, state.apparentTemperature);
+      }
+      const humSvc = this.apparentTempAccessory.getService(this.Service.HumiditySensor);
+      if (humSvc) {
+        humSvc.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, state.measuredHumidity);
+      }
+    }
+
     // 2. Sync Matter accessory if active
     if (!this.api.matter || !this.matterAccessoryUUID) return;
     const systemMode = state.power
@@ -394,13 +429,14 @@ export class AehaAirConditionerPlatform implements DynamicPlatformPlugin {
   // =========================================================================
   private setupHapAccessory(name: string): void {
     const uuid = this.api.hap.uuid.generate(`hap-${name}`);
-    let accessory = this.hapAccessory;
+    let accessory = this.cachedAccessories.get(uuid);
 
     if (!accessory) {
       accessory = new this.api.platformAccessory(name, uuid);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      this.hapAccessory = accessory;
+      this.cachedAccessories.set(uuid, accessory);
     }
+    this.hapAccessory = accessory;
 
     accessory.getService(this.Service.AccessoryInformation)!
       .setCharacteristic(this.Characteristic.Manufacturer, 'Fujitsu / Custom')
@@ -726,5 +762,49 @@ export class AehaAirConditionerPlatform implements DynamicPlatformPlugin {
     );
 
     this.log.success(`[HAP] Successfully configured HeaterCooler accessory: "${name}"`);
+  }
+
+  // =========================================================================
+  // APPARENT TEMPERATURE ACCESSORY (Steadman's Formula, Wind Speed = 0)
+  // =========================================================================
+  private setupApparentTempAccessory(baseName: string): void {
+    const displayName = 'Apparent Temperature';
+    const uuid = this.api.hap.uuid.generate(`hap-apparent-temp-${baseName}`);
+    let accessory = this.cachedAccessories.get(uuid);
+
+    if (!accessory) {
+      accessory = new this.api.platformAccessory(displayName, uuid);
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      this.cachedAccessories.set(uuid, accessory);
+    }
+    this.apparentTempAccessory = accessory;
+
+    accessory.getService(this.Service.AccessoryInformation)!
+      .setCharacteristic(this.Characteristic.Manufacturer, 'Sanyo / Steadman')
+      .setCharacteristic(this.Characteristic.Model, 'Steadman Apparent Temp (v=0)')
+      .setCharacteristic(this.Characteristic.SerialNumber, 'AEHA-AT-001');
+
+    const tempService = accessory.getService(this.Service.TemperatureSensor) ||
+      accessory.addService(this.Service.TemperatureSensor, displayName);
+    tempService.setPrimaryService(true);
+    tempService.addOptionalCharacteristic(this.Characteristic.ConfiguredName);
+    tempService.setCharacteristic(this.Characteristic.Name, displayName);
+    tempService.setCharacteristic(this.Characteristic.ConfiguredName, displayName);
+
+    tempService.getCharacteristic(this.Characteristic.CurrentTemperature)
+      .setProps({ minValue: -50, maxValue: 100, minStep: 0.1 })
+      .onGet(() => this.stateManager.getState().apparentTemperature);
+
+    const humidityService = accessory.getService(this.Service.HumiditySensor) ||
+      accessory.addService(this.Service.HumiditySensor, 'Relative Humidity');
+    tempService.addLinkedService(humidityService);
+    humidityService.addOptionalCharacteristic(this.Characteristic.ConfiguredName);
+    humidityService.setCharacteristic(this.Characteristic.Name, 'Relative Humidity');
+    humidityService.setCharacteristic(this.Characteristic.ConfiguredName, 'Relative Humidity');
+
+    humidityService.getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
+      .onGet(() => this.stateManager.getState().measuredHumidity);
+
+    this.log.success(`[HAP] Successfully configured Apparent Temperature accessory: "${displayName}"`);
   }
 }
